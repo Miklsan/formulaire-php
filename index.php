@@ -1,6 +1,9 @@
 <?php
 $firstname = $lastname = $email = $phonenumber = $message ="";
 $firstnameError = $lastnameError = $emailError = $phonenumberError = $messageError ="";
+$isSuccess = false;
+$emailTo = "mborghmans@gmail.com";
+
 if ($_SERVER["REQUEST_METHOD"] == "POST"){
 
     $firstname = verifyInput ($_POST['firstname']);
@@ -8,29 +11,59 @@ if ($_SERVER["REQUEST_METHOD"] == "POST"){
     $email = verifyInput ($_POST['email']);
     $phonenumber = verifyInput ($_POST['phonenumber']);
     $message = verifyInput ($_POST['message']);
+    $isSuccess = true;
+    $emailText = "";
 
     if(empty($firstname)){
         $firstnameError = "N'oublis pas ton prénom ";
+        $isSuccess = false;
+    }
+    else{
+        $emailText .= "Firstname: $firstname\n";
     }
     if(empty($lastname)){
         $lastnameError = "N'oublis pas ton nom ";
+        $isSuccess = false;
     }
-    if(empty($email)){
-        $emailError = "N'oublis pas ton adresse mail";
+    else{
+        $emailText .= "Lastname : $lastname\n";
+    }  
+    if(!isEmail($email)){
+        $emailError ="Ceci n'est pas un une adresse mail";
+        $isSuccess = false;
+    }
+    else{
+        $emailText .= "Email : $email\n";
+    }
+    if(!isPhone($phonenumber)){
+        $phonenumberError = "Que des chiffres et des espaces stp";
+        $isSuccess = false;
+    }
+    else{
+        $emailText .= "Phone : $phonenumber\n";
     }
     if(empty($message)){
         $messageError = "Qu'est ce que tu veux me dire ? ";
+        $isSuccess = false;
     }
-    if(!isEmail($email)){
-        $emailError ="Ceci n'est pas un une adresse mail";
+    else{
+        $emailText .= "Message : $message\n";
+    }
+    if ($isSuccess){
+       $headers ="From: $firstname $lastname <$email>\r\nReply-To: $email";//entête d'email
+        mail($emailTo,"Vous avez un message", $emailText, $headers);//"mail" php function to email (adress,object,text,headers)
+        $firstname = $lastname = $email = $phonenumber = $message ="";// reset form's values
     }
 }
+function isPhone($var) {
+    return preg_match("/^[0-9 ]*$/", $var);//preg_match expression reguliere chiffre entre 0-9 avec espace
+}
 function isEmail($var){
-    return filter_var($var, FILTER_VALIDATE_EMAIL);
+    return filter_var($var, FILTER_VALIDATE_EMAIL);// isEmail compared by FILTER_VALIDATE_EMAIL
 }
 function verifyInput($var){
 
-    $var = trim($var);
+     $var = trim($var);
     $var = stripslashes($var);
     $var = htmlspecialchars($var);
     return $var;
@@ -54,7 +87,16 @@ function verifyInput($var){
     <link rel="stylesheet" href="css/style.css">
 </head>
 
+
+
+
+
+
 <body>
+>
+
+
+
     <div class="container">
         <div class="divider">
         </div>
@@ -105,7 +147,7 @@ function verifyInput($var){
                         </div>
 
                     </div>
-                    <p class="merci">Votre message a bien été envoyé.Merci de m'avoir contacté </p>
+                    <p class="merci" style="display:<?php if($isSuccess) echo 'block'; else echo 'none'?>">Votre message a bien été envoyé.Merci de m'avoir contacté </p>
                 </form>
 
             </div>
